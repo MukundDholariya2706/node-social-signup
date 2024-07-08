@@ -122,7 +122,7 @@ class AuthService {
       const { email, first_name, last_name } = req.body;
 
       let user_exist = await Authentication.findOne({
-        email: decoded?.email,
+        email: email,
         is_deleted: false,
       }).lean();
 
