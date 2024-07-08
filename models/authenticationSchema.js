@@ -29,6 +29,10 @@ let authenticationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    is_linkedIn_signup: {
+      type: Boolean,
+      default: false,
+    },
     is_deleted: {
       type: Boolean,
       default: false,

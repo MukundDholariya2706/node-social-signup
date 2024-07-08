@@ -11,7 +11,17 @@ const googleSignupJWT = async (req, res) => {
   await authService.googleSignJWT(req, res);
 };
 
+const facebookSignup = async (req, res) => {
+  await authService.facebookSign(req, res);
+};
+
+const linkedInSignup = async (req, res) => {
+  await authService.linkedInSign(req, res);
+};
+
 module.exports = {
   googleSignUp,
   googleSignupJWT,
+  facebookSignup,
+  linkedInSignup
 };
