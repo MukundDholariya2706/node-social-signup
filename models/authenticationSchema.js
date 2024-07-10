@@ -18,9 +18,6 @@ let authenticationSchema = new mongoose.Schema(
     password: {
       type: String,
     },
-    auth_token: {
-      type: String,
-    },
     is_google_signup: {
       type: Boolean,
       default: false,

@@ -3,6 +3,7 @@ const { google } = require("googleapis");
 const jwt = require("jsonwebtoken");
 const axios = require("axios");
 const { sendResponse } = require("./responseService");
+const bcrypt = require("bcryptjs");
 const Authentication = require("../models/authenticationSchema");
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -34,6 +35,22 @@ class AuthService {
         user: payload,
       };
     } catch (error) {}
+  };
+
+  passwordEncryption = async (payload) => {
+    try {
+      return await bcrypt.hash(payload.password, 14);
+    } catch (error) {
+      console.log(`Error while password encryption: ${error}`);
+    }
+  };
+
+  passwordVerifier = async (payload) => {
+    try {
+      return await bcrypt.compare(payload.password, payload.encrypted_password);
+    } catch (error) {
+      console.log(`Error while password verification: ${error}`);
+    }
   };
 
   googleSign = async (req, res) => {
@@ -81,7 +98,7 @@ class AuthService {
           404,
           false,
           "Google oAuth token not found.",
-          undefined
+          {}
         );
       }
 
@@ -111,9 +128,7 @@ class AuthService {
         ...token,
       });
     } catch (error) {
-      return sendResponse(res, 500, false, error.message, {
-        message: error.message,
-      });
+      return sendResponse(res, 500, false, error.message, {});
     }
   };
 
@@ -145,9 +160,7 @@ class AuthService {
         ...token,
       });
     } catch (error) {
-      return sendResponse(res, 500, false, error.message, {
-        message: error.message,
-      });
+      return sendResponse(res, 500, false, error.message, {});
     }
   };
 
@@ -192,9 +205,83 @@ class AuthService {
         ...token,
       });
     } catch (error) {
-      return sendResponse(res, 500, false, error.message, {
-        message: error.message,
+      return sendResponse(res, 500, false, error.message, {});
+    }
+  };
+
+  userSignUp = async (req, res) => {
+    try {
+      let { first_name, last_name, password, email } = req.body;
+
+      let user_exist = await Authentication.findOne({
+        email: email?.toLowerCase(),
+        is_deleted: false,
+      }).lean();
+
+      if (user_exist) {
+        return sendResponse(
+          res,
+          400,
+          false,
+          "This email is already exist. Please choose another one.",
+          {}
+        );
+      }
+
+      if (password) {
+        password = await this.passwordEncryption({ password });
+      }
+
+      user_exist = await Authentication.create({
+        first_name,
+        last_name,
+        email: email?.toLowerCase(),
+        password,
       });
+
+      user_exist = user_exist.toObject({ getters: true });
+
+      // generate token
+      const token = await this.tokenGenerator({ ...user_exist });
+
+      return sendResponse(res, 200, true, "User register successfully", {
+        user: user_exist,
+        ...token,
+      });
+    } catch (error) {
+      return sendResponse(res, 500, false, error.message, {});
+    }
+  };
+
+  login = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      let user_exist = await Authentication.findOne({
+        email,
+        is_deleted: false,
+      }).lean();
+
+      if (!user_exist)
+        return sendResponse(res, 404, false, "User not found", {});
+
+      if (
+        !(await this.passwordVerifier({
+          password,
+          encrypted_password: user_exist?.password,
+        }))
+      )
+        return sendResponse(res, 400, false, "Incorrect password", {});
+
+      // generate token
+      const token = await this.tokenGenerator({ ...user_exist });
+
+      return sendResponse(res, 200, true, "Login succssfully", {
+        user: user_exist,
+        ...token,
+      });
+    } catch (error) {
+      return sendResponse(res, 500, false, error.message, {});
     }
   };
 }

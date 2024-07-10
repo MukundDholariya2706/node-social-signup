@@ -19,9 +19,19 @@ const linkedInSignup = async (req, res) => {
   await authService.linkedInSign(req, res);
 };
 
+const userSignup = async (req, res) => {
+  await authService.userSignUp(req, res);
+};
+
+const login = async (req, res) => {
+  await authService.login(req, res);
+};
+
 module.exports = {
   googleSignUp,
   googleSignupJWT,
   facebookSignup,
-  linkedInSignup
+  linkedInSignup,
+  userSignup,
+  login,
 };
