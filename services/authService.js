@@ -12,6 +12,8 @@ const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URL;
 const LINKDIN_CLIENT_ID = process.env.LINKDIN_CLIENT_ID;
 const LINKDIN_CLIENT_ID_SECRET = process.env.LINKDIN_CLIENT_ID_SECRET;
 const LINKDIN_REDIRECT_URL = process.env.LINKDIN_REDIRECT_URL;
+const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
@@ -280,6 +282,35 @@ class AuthService {
         user: user_exist,
         ...token,
       });
+    } catch (error) {
+      return sendResponse(res, 500, false, error.message, {});
+    }
+  };
+
+  githubSign = async (req, res) => {
+    try {
+      console.log('called');
+      const { code } = req.body;
+
+      const response = await axios.post(
+        "https://github.com/login/oauth/access_token",
+        {
+          client_id: GITHUB_CLIENT_ID,
+          client_secret: GITHUB_CLIENT_SECRET,
+          code,
+        }
+      );
+
+      const params = new URLSearchParams(response?.data);
+      const accessToken = params.get('access_token');
+      const tokenType = params.get('token_type');
+      
+      const githubUserDetails = await axios.get("https://api.github.com/user",{
+        headers: {
+          Authorization: `${tokenType} ${accessToken}`
+        }
+      })
+      return sendResponse(res, 200, true, "", githubUserDetails.data);
     } catch (error) {
       return sendResponse(res, 500, false, error.message, {});
     }

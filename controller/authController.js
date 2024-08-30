@@ -27,6 +27,10 @@ const login = async (req, res) => {
   await authService.login(req, res);
 };
 
+const githubSignup = async (req, res) => {
+  await authService.githubSign(req, res);
+}
+
 module.exports = {
   googleSignUp,
   googleSignupJWT,
@@ -34,4 +38,5 @@ module.exports = {
   linkedInSignup,
   userSignup,
   login,
+  githubSignup
 };

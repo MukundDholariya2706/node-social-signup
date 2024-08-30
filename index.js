@@ -12,7 +12,7 @@ require("./config/dbConnection");
 const app = express();
 
 const PORT = process.env.PORT || 3001;
-const URL = process.env.URL || "localhost"
+const URL = process.env.URL || "localhost";
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
